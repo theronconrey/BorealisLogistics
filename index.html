@@ -73,6 +73,20 @@
       overflow: hidden;
     }
 
+    .logo-wrap {
+      background: #fff;
+      border-radius: 16px;
+      padding: 1rem 1.5rem;
+      display: inline-block;
+      margin-bottom: 2rem;
+    }
+
+    .logo-wrap img {
+      display: block;
+      height: 80px;
+      width: auto;
+    }
+
     .hero::before {
       content: '';
       position: absolute;
@@ -281,12 +295,15 @@
 <body>
 
   <nav>
-    <a class="nav-logo" href="/">🌌 Borealis Logistics</a>
+    <a class="nav-logo" href="/">Borealis Logistics</a>
     <a class="nav-link" href="mailto:hello@borealislogistics.com">Contact</a>
   </nav>
 
   <!-- HERO -->
   <section class="hero">
+    <div class="logo-wrap">
+      <img src="assets/borealiscore-logo.png" alt="BorealisCore" />
+    </div>
     <p class="hero-eyebrow">Introducing BorealisCore</p>
     <h1>Operations software for the<br /><strong>modern grow.</strong></h1>
     <p class="hero-sub">
