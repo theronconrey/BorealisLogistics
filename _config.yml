@@ -1,0 +1,6 @@
+title: Borealis Logistics
+description: Cannabis Seed-to-Sale Software
+url: "https://borealislogistics.com"
+
+plugins:
+  - jekyll-feed
