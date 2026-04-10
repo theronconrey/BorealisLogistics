@@ -82,7 +82,7 @@ Although most changes are likely to be minor, Borealis Logistics may change its 
 If you have any questions about our Privacy Policy, please contact us via email.
 
 Borealis Logistics  
-202 N Cedar Ave.  
+202 N Cedar Ave., STE #1  
 Owatonna, MN 55060  
 United States
 

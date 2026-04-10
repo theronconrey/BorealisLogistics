@@ -90,7 +90,7 @@ The limitations and exclusions of liability set out in this section govern all l
 If you have any questions about our Terms of Service, please contact us via email.
 
 Borealis Logistics  
-202 N Cedar Ave.  
+202 N Cedar Ave., STE #1  
 Owatonna, MN 55060  
 United States
 
