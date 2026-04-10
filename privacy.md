@@ -15,13 +15,6 @@ permalink: /privacy/
 
 Your privacy is important to us.
 
-Borealis Logistics is located at:
-
-Borealis Logistics  
-202 N Cedar Ave.  
-Owatonna, MN 55060  
-United States
-
 It is Borealis Logistics's policy to respect your privacy regarding any information we may collect while operating our website. This Privacy Policy applies to www.borealislogistics.com (hereinafter, "us", "we", or "www.borealislogistics.com"). We respect your privacy and are committed to protecting personally identifiable information you may provide us through the Website. We have adopted this privacy policy ("Privacy Policy") to explain what information may be collected on our Website, how we use this information, and under what circumstances we may disclose the information to third parties. This Privacy Policy applies only to information we collect through the Website and does not apply to our collection of information from other sources.
 
 This Privacy Policy, together with the Terms of Service posted on our Website, set forth the general rules and policies governing your use of our Website. Depending on your activities when visiting our Website, you may be required to agree to additional terms of service.
@@ -87,6 +80,11 @@ Although most changes are likely to be minor, Borealis Logistics may change its 
 ## 9. Contact Information
 
 If you have any questions about our Privacy Policy, please contact us via email.
+
+Borealis Logistics  
+202 N Cedar Ave.  
+Owatonna, MN 55060  
+United States
 
 <a class="btn-ghost" data-mailto>hello@borealislogistics.com</a>
 
