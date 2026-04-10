@@ -955,7 +955,7 @@ section {
   padding: 10rem 5% 7rem;
   position: relative;
   overflow: hidden;
-  min-height: 60vh;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
