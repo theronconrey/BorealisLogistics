@@ -4,8 +4,8 @@ title: Privacy Policy
 permalink: /privacy/
 ---
 
-<section class="legal">
-<div class="legal-inner">
+<section class="legal" markdown="1">
+<div class="legal-inner" markdown="1">
 
 <div class="sec-tag">Privacy Policy</div>
 
