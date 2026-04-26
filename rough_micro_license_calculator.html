@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rough Micro License Calculator — Borealis Logistics</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  /* Borealis palette */
+  --bg:#020b12;
+  --teal:#00d4b4;
+  --cyan:#22d3ee;
+  --violet:#8b5cf6;
+  --blue:#38bdf8;
+  --line:rgba(0,212,180,0.12);
+  --line2:rgba(0,212,180,0.22);
+  --line3:rgba(0,212,180,0.35);
+  --mute:#4a7585;
+  --mute-2:#3a5965;
+  --text:#d4ede8;
+  --display:'Playfair Display',serif;
+  --body:'Manrope',sans-serif;
+
+  /* Host-compatible tokens (mapped to Borealis palette so calculator JS keeps working) */
+  --color-text-primary:#ffffff;
+  --color-text-secondary:#7e9ba6;
+  --color-text-tertiary:#4a7585;
+  --color-text-success:#00d4b4;
+  --color-text-danger:#f87171;
+  --color-text-info:#22d3ee;
+  --color-text-warning:#fbbf24;
+  --color-background-primary:rgba(255,255,255,0.025);
+  --color-background-secondary:rgba(0,212,180,0.045);
+  --color-background-tertiary:rgba(255,255,255,0.015);
+  --color-background-info:rgba(34,211,238,0.10);
+  --color-background-success:rgba(0,212,180,0.10);
+  --color-background-danger:rgba(248,113,113,0.10);
+  --color-border-tertiary:rgba(0,212,180,0.12);
+  --color-border-secondary:rgba(0,212,180,0.22);
+  --color-border-primary:rgba(0,212,180,0.40);
+  --color-border-info:rgba(34,211,238,0.40);
+  --border-radius-md:8px;
+  --border-radius-lg:12px;
+  --border-radius-xl:16px;
+  --font-sans:'Manrope',sans-serif;
+  --font-serif:'Playfair Display',serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--body);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+#aurora{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.32}
+.page{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:3rem 5% 4rem}
+
+/* ── Title block ── */
+.title-tag{display:inline-flex;align-items:center;gap:8px;font-size:.68rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);margin-bottom:1.25rem}
+.title-tag::before{content:'';width:22px;height:1px;background:var(--teal)}
+.calc-title{
+  font-family:var(--display);
+  font-size:clamp(2rem,4.5vw,3.2rem);
+  font-weight:700;
+  line-height:1.05;
+  color:white;
+  letter-spacing:-.015em;
+  margin-bottom:.85rem;
+}
+.calc-title em{
+  font-style:italic;
+  color:transparent;
+  -webkit-text-stroke:1.2px rgba(0,212,180,0.55);
+}
+.calc-subtitle{font-size:.92rem;color:var(--mute);max-width:600px;line-height:1.85;margin-bottom:0}
+.calc-divider{height:1px;background:linear-gradient(90deg,var(--teal),var(--cyan),var(--violet),transparent);margin:2.5rem 0 2rem;opacity:.5}
+
+/* ── Tabs ── */
+.mn-tabs{
+  display:flex;gap:0;flex-wrap:wrap;
+  margin-bottom:2rem;
+  border-bottom:1px solid var(--line);
+}
+.mn-tab{
+  padding:.85rem 1.4rem;
+  font-family:var(--body);font-size:.78rem;font-weight:600;
+  letter-spacing:.02em;
+  color:var(--mute);
+  cursor:pointer;
+  border:none;background:transparent;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+  transition:color .25s,border-color .25s;
+}
+.mn-tab:hover{color:var(--text)}
+.mn-tab.active{color:var(--teal);border-bottom-color:var(--teal)}
+
+/* ── Sections (cards) ── */
+.mn-section{
+  background:rgba(255,255,255,0.025);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:1.4rem 1.5rem;
+  margin-bottom:14px;
+  position:relative;
+}
+.mn-section::after{
+  content:'';position:absolute;
+  bottom:0;left:14px;right:14px;height:2px;
+  background:linear-gradient(90deg,var(--teal),var(--cyan),var(--violet));
+  opacity:.5;
+  border-radius:0 0 2px 2px;
+}
+.mn-section h3{
+  font-family:var(--body);font-size:.95rem;font-weight:600;
+  color:white;margin:0 0 .8rem;letter-spacing:-.005em;
+}
+.mn-section h4{
+  font-size:.66rem;font-weight:700;
+  color:var(--teal);
+  text-transform:uppercase;letter-spacing:.14em;
+  margin:0 0 1rem;
+}
+
+/* Hero/highlighted section variant — used for the side-by-side outer card and 5yr summary */
+.mn-section[style*="background: var(--color-background-primary)"]{
+  background:rgba(0,212,180,0.04) !important;
+  border-color:var(--line2) !important;
+}
+
+/* ── Slider rows ── */
+.mn-row{
+  display:grid;
+  grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 80px;
+  gap:14px;
+  align-items:center;
+  padding:6px 0;
+  font-size:.78rem;
+}
+.mn-row label{color:var(--text);font-weight:500;min-width:0}
+.mn-row .val{
+  text-align:right;
+  font-family:var(--body);
+  font-variant-numeric:tabular-nums;
+  font-weight:700;color:var(--teal);
+  min-width:80px;
+}
+
+/* Range slider */
+input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  width:100%;background:transparent;
+  height:18px;cursor:pointer;
+  min-width:0;
+}
+input[type=range]::-webkit-slider-runnable-track{
+  height:3px;border-radius:2px;
+  background:linear-gradient(90deg,rgba(0,212,180,0.35),rgba(34,211,238,0.25),rgba(139,92,246,0.18));
+}
+input[type=range]::-moz-range-track{
+  height:3px;border-radius:2px;
+  background:linear-gradient(90deg,rgba(0,212,180,0.35),rgba(34,211,238,0.25),rgba(139,92,246,0.18));
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  appearance:none;
+  width:14px;height:14px;border-radius:50%;
+  background:var(--teal);
+  border:2px solid var(--bg);
+  margin-top:-6px;
+  box-shadow:0 0 0 1px rgba(0,212,180,0.5);
+  cursor:pointer;
+  transition:transform .15s,box-shadow .15s;
+}
+input[type=range]::-webkit-slider-thumb:hover{
+  transform:scale(1.15);
+  box-shadow:0 0 0 4px rgba(0,212,180,0.18);
+}
+input[type=range]::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;
+  background:var(--teal);
+  border:2px solid var(--bg);
+  cursor:pointer;
+  box-shadow:0 0 0 1px rgba(0,212,180,0.5);
+}
+
+/* ── Mode toggle (segmented) ── */
+.mn-mode{
+  display:flex;gap:3px;padding:3px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--line);
+  border-radius:8px;
+  margin-bottom:14px;
+  flex-wrap:wrap;
+}
+.mn-mode button{
+  flex:1;min-width:fit-content;
+  padding:.5rem .85rem;
+  font-family:var(--body);font-size:.74rem;font-weight:600;
+  letter-spacing:.01em;
+  border:none;background:transparent;border-radius:6px;
+  color:var(--mute);cursor:pointer;
+  transition:background .2s,color .2s;
+  white-space:nowrap;
+}
+.mn-mode button:hover{color:var(--text)}
+.mn-mode button.active{
+  background:rgba(0,212,180,0.12);
+  color:var(--teal);
+}
+
+/* ── Summary stat cards (top of A/B) ── */
+.mn-summary{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:12px;
+  margin-bottom:1.75rem;
+}
+.mn-stat{
+  background:rgba(0,212,180,0.045);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:1rem 1.1rem;
+  position:relative;
+}
+.mn-stat::after{
+  content:'';position:absolute;bottom:0;left:12px;right:12px;height:2px;
+  background:linear-gradient(90deg,var(--teal),var(--cyan),var(--violet));
+}
+.mn-stat .lbl{
+  font-size:.62rem;color:var(--mute);
+  text-transform:uppercase;letter-spacing:.1em;font-weight:600;
+  margin-bottom:.4rem;
+}
+.mn-stat .num{
+  font-family:var(--body);
+  font-size:1.5rem;font-weight:800;
+  color:white;line-height:1.1;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:-.015em;
+}
+.mn-stat.danger .num{color:#f87171}
+.mn-stat.success .num{color:var(--teal)}
+.mn-stat .sub{
+  font-size:.66rem;color:var(--mute-2);
+  margin-top:.3rem;letter-spacing:.02em;
+}
+
+/* ── Layout grids ── */
+.mn-grid2{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:14px;
+}
+@media (max-width: 700px){
+  .mn-grid2{grid-template-columns:1fr}
+}
+
+/* ── P&L table ── */
+.mn-pl{
+  background:rgba(255,255,255,0.025);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:1.4rem 1.5rem;
+  margin-top:1rem;
+  position:relative;
+}
+.mn-pl::after{
+  content:'';position:absolute;bottom:0;left:14px;right:14px;height:2px;
+  background:linear-gradient(90deg,var(--teal),var(--cyan),var(--violet));
+  opacity:.4;
+}
+.mn-pl table{
+  width:100%;font-size:.8rem;border-collapse:collapse;
+  font-variant-numeric:tabular-nums;
+  font-family:var(--body);
+}
+.mn-pl td{padding:5px 0;color:var(--text)}
+.mn-pl td:first-child{color:var(--text);font-weight:400}
+.mn-pl td:last-child{text-align:right;font-weight:600}
+.mn-pl tr.total td{
+  border-top:1px solid var(--line2);
+  padding-top:9px;font-weight:700;color:white;
+}
+.mn-pl tr.total td:last-child{color:var(--teal)}
+.mn-pl tr.major td{
+  border-top:1px solid var(--line);
+  padding-top:7px;font-weight:600;
+}
+.mn-pl tr.deduction td:last-child{color:#f87171;font-weight:600}
+.mn-pl tr.subtle td{
+  color:var(--mute);padding-left:14px;font-size:.74rem;
+}
+.mn-pl tr.subtle td:last-child{color:var(--mute);font-weight:500}
+
+/* ── Notes ── */
+.mn-note{
+  font-size:.74rem;color:var(--mute);
+  margin:.5rem 0 0;line-height:1.7;
+}
+.mn-note strong{color:var(--text);font-weight:600}
+
+/* ── Info icon (tooltip) ── */
+.mn-info{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:14px;height:14px;border-radius:50%;
+  border:1px solid rgba(0,212,180,0.4);
+  color:var(--teal);
+  font-size:9px;font-weight:700;font-style:normal;font-family:var(--body);
+  margin-left:5px;cursor:help;position:relative;
+  vertical-align:middle;line-height:1;flex-shrink:0;
+  background:rgba(0,212,180,0.06);
+}
+.mn-info::before{content:"i"}
+.mn-info:hover{background:var(--teal);color:var(--bg);border-color:var(--teal)}
+.mn-info::after{
+  content:attr(data-tip);
+  position:absolute;bottom:calc(100% + 8px);right:-8px;
+  width:300px;max-width:300px;
+  background:#0a1820;
+  border:1px solid var(--line2);
+  color:var(--text);
+  padding:11px 13px;
+  border-radius:8px;
+  font-size:.72rem;font-weight:400;line-height:1.55;
+  font-family:var(--body);
+  opacity:0;pointer-events:none;
+  transition:opacity .2s;
+  z-index:100;white-space:normal;text-align:left;
+}
+.mn-info:hover::after{opacity:1}
+
+/* ── Misc / pills / leg ── */
+.mn-pill{
+  display:inline-block;font-size:.65rem;
+  padding:2px 8px;border-radius:8px;
+  background:rgba(34,211,238,0.10);color:var(--cyan);
+  margin-left:8px;vertical-align:middle;font-weight:600;
+}
+.mn-bar{height:10px;background:rgba(255,255,255,0.04);border-radius:5px;overflow:hidden;display:flex;margin:8px 0 4px}
+.mn-bar span{display:block;height:100%}
+.mn-leg{display:flex;flex-wrap:wrap;gap:12px;font-size:.68rem;color:var(--mute);margin-bottom:8px}
+.mn-leg span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:middle}
+
+/* ── P&L heading override (the small "Annual P&L" subhead inside panels A/B) ── */
+.mn-panel > h3{
+  font-family:var(--body) !important;
+  font-size:.9rem !important;font-weight:600 !important;
+  color:white !important;
+  margin:1.75rem 0 .4rem !important;
+  letter-spacing:-.005em;
+}
+
+/* Footer */
+.calc-footer{
+  margin-top:3rem;padding-top:1.5rem;
+  border-top:1px solid var(--line);
+  font-size:.7rem;color:var(--mute);
+  text-align:center;line-height:1.7;
+}
+.calc-footer a{color:var(--teal);text-decoration:none}
+
+/* ── Appendix ── */
+.ap-list{
+  list-style:none;
+  padding:0;margin:0;
+  display:flex;flex-direction:column;gap:.7rem;
+}
+.ap-list li{
+  font-size:.78rem;
+  color:var(--text);
+  line-height:1.7;
+  padding-left:1rem;
+  position:relative;
+}
+.ap-list li::before{
+  content:'';
+  position:absolute;
+  left:0;top:.5rem;
+  width:5px;height:5px;
+  border-radius:50%;
+  background:var(--teal);
+  opacity:.7;
+}
+.ap-list li strong{color:white;font-weight:600}
+.ap-list a{
+  color:var(--cyan);
+  text-decoration:none;
+  border-bottom:1px solid rgba(34,211,238,0.25);
+  transition:color .2s,border-color .2s;
+}
+.ap-list a:hover{
+  color:var(--teal);
+  border-bottom-color:var(--teal);
+}
+.ap-handout{
+  display:inline-block;
+  font-size:.6rem;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;
+  padding:2px 8px;border-radius:4px;
+  background:rgba(139,92,246,0.15);
+  color:#c4b5fd;
+  border:1px solid rgba(139,92,246,0.3);
+  margin-left:4px;vertical-align:middle;
+  white-space:nowrap;
+}
+.ap-estimate{
+  display:inline-block;
+  font-size:.6rem;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;
+  padding:2px 8px;border-radius:4px;
+  background:rgba(251,191,36,0.12);
+  color:#fbbf24;
+  border:1px solid rgba(251,191,36,0.28);
+  margin-left:4px;vertical-align:middle;
+  white-space:nowrap;
+}
+</style>
+</head>
+<body>
+
+<canvas id="aurora"></canvas>
+
+<div class="page">
+
+<div class="title-tag">Minnesota cannabis · planning model</div>
+<h1 class="calc-title">Rough micro license <em>calculator.</em></h1>
+<p class="calc-subtitle">Estimate the annual and 5-year economics of a Minnesota cannabis microbusiness operating under a Blue Ox Cultivation Campus management agreement. All assumptions are adjustable. Confirm contract terms with cannabis counsel and a §280E-savvy CPA before relying on outputs.</p>
+
+<div class="calc-divider"></div>
+
+<div class="mn-model">
+
+  <div class="mn-tabs">
+    <button class="mn-tab active" data-tab="A">Pathway A — Flower</button>
+    <button class="mn-tab" data-tab="B">Pathway B — Oil / Vapes</button>
+    <button class="mn-tab" data-tab="C">Side by side</button>
+    <button class="mn-tab" data-tab="D">5-year outlook</button>
+    <button class="mn-tab" data-tab="E">References</button>
+  </div>
+
+  <div id="panel-A" class="mn-panel">
+
+    <div class="mn-summary" id="A_summary"></div>
+
+    <div class="mn-mode" id="mode-A">
+      <button class="active" data-mode="retail">Retail-ready to dispensaries</button>
+      <button data-mode="bulk">Bulk to wholesalers</button>
+    </div>
+
+    <div class="mn-grid2">
+      <div class="mn-section">
+        <h4>Yield & price</h4>
+        <div class="mn-row"><label>Dried yield (lbs)</label><input type="range" id="A_yield" min="600" max="2000" step="50" value="1500"><div class="val" id="A_yield_v">1,500</div></div>
+        <div class="mn-row"><label>Wholesale price ($/lb)</label><input type="range" id="A_price" min="500" max="1200" step="25" value="900"><div class="val" id="A_price_v">$900</div></div>
+        <p class="mn-note">MN wholesale is $4,000+/lb today, expected to compress through 2026–27. MCS projects $900.</p>
+      </div>
+
+      <div class="mn-section">
+        <h4>MCS fees (per flyer)</h4>
+        <div class="mn-row"><label>Annual fee</label><input type="range" id="A_fee" min="0" max="200000" step="5000" value="150000"><div class="val" id="A_fee_v">$150k</div></div>
+        <div class="mn-row"><label>Monthly lease</label><input type="range" id="A_lease" min="0" max="3000" step="50" value="1250"><div class="val" id="A_lease_v">$1.25k</div></div>
+        <div class="mn-row"><label>Monthly admin</label><input type="range" id="A_admin" min="0" max="5000" step="100" value="2500"><div class="val" id="A_admin_v">$2.5k</div></div>
+        <div class="mn-row"><label>Trim cost ($/lb)</label><input type="range" id="A_trim" min="50" max="250" step="10" value="150"><div class="val" id="A_trim_v">$150</div></div>
+      </div>
+
+      <div class="mn-section">
+        <h4>Lab testing <i class="mn-info" data-tip="MN OCM requires testing for potency, pesticides, heavy metals, microbials, mycotoxins, and (for oil) residual solvents on every batch before sale. The Blue Ox flyer lists 'Regulatory & Licensing' as a service but does not state whether lab testing fees are bundled in the $30k admin or charged separately. Conservative default: separate licensee cost. Confirm with MCS in writing."></i></h4>
+        <div class="mn-mode" id="lab-mode-A">
+          <button data-lab="separate" class="active">Separate licensee cost</button>
+          <button data-lab="included">Included in MCS fees</button>
+        </div>
+        <div class="mn-row"><label>Annual testing cost</label><input type="range" id="A_lab" min="10000" max="80000" step="2500" value="40000"><div class="val" id="A_lab_v">$40k</div></div>
+        <p class="mn-note">~$400–700 per flower batch test, batches typically 10–25 lbs. Failed tests trigger retest fees or remediation/destruction. Treated as COGS (deductible under §471) regardless of who pays.</p>
+      </div>
+
+      <div class="mn-section">
+        <h4>Post-grow operating costs</h4>
+        <div class="mn-row"><label>Packaging & labels</label><input type="range" id="A_pack" min="0" max="200000" step="5000" value="100000"><div class="val" id="A_pack_v">$100k</div></div>
+        <div class="mn-row"><label>Branding & marketing</label><input type="range" id="A_brand" min="0" max="120000" step="5000" value="50000"><div class="val" id="A_brand_v">$50k</div></div>
+        <div class="mn-row"><label>Sales operation</label><input type="range" id="A_sales" min="0" max="200000" step="5000" value="130000"><div class="val" id="A_sales_v">$130k</div></div>
+        <div class="mn-row"><label>Transportation</label><input type="range" id="A_trans" min="0" max="60000" step="2500" value="25000"><div class="val" id="A_trans_v">$25k</div></div>
+        <div class="mn-row"><label>Banking & payments</label><input type="range" id="A_bank" min="5000" max="60000" step="2500" value="35000"><div class="val" id="A_bank_v">$35k</div></div>
+        <div class="mn-row"><label>Insurance</label><input type="range" id="A_ins" min="15000" max="100000" step="2500" value="50000"><div class="val" id="A_ins_v">$50k</div></div>
+        <div class="mn-row"><label>Professional fees</label><input type="range" id="A_prof" min="20000" max="150000" step="5000" value="80000"><div class="val" id="A_prof_v">$80k</div></div>
+        <div class="mn-row"><label>Bad debt allowance</label><input type="range" id="A_debt" min="0" max="100000" step="2500" value="35000"><div class="val" id="A_debt_v">$35k</div></div>
+      </div>
+
+      <div class="mn-section">
+        <h4>Tax assumptions</h4>
+        <div class="mn-row"><label>Federal §280E rate <i class="mn-info" data-tip="IRC §280E denies cannabis businesses the operating-expense deductions other industries receive. Only COGS (cultivation, processing, packaging) stays deductible under §471. Federal tax is calculated on gross profit (revenue − COGS). Default: 21% (C-corp federal rate). Pass-through entities (LLC, S-corp) expose owners to individual rates of 24–37% on the same gross profit."></i></label><input type="range" id="A_280" min="0" max="40" step="1" value="21"><div class="val" id="A_280_v">21%</div></div>
+        <div class="mn-row"><label>MN state tax (decoupled) <i class="mn-info" data-tip="Minnesota DECOUPLES from §280E. Licensed cannabis businesses can claim a 'cannabis income tax subtraction' on their MN return for expenses §280E disallowed federally. So MN tax is calculated on real net income (after opex), not gross profit. Default: 9.8% (MN corporate franchise tax flat rate)."></i></label><input type="range" id="A_mn" min="0" max="15" step="0.1" value="9.8"><div class="val" id="A_mn_v">9.8%</div></div>
+        <p class="mn-note"><strong>Federal:</strong> §280E applies — tax on gross profit. <strong>Minnesota:</strong> decoupled from §280E via cannabis income tax subtraction — tax on real net income. <strong>15% MN cannabis gross receipts tax:</strong> retail only, not modeled here (this is a wholesale operation). Confirm structure (C-corp vs pass-through) with a §280E-savvy CPA.</p>
+      </div>
+    </div>
+
+    <h3 style="font-size:16px; font-weight:500; margin: 1.5rem 0 0.5rem;">Annual P&amp;L</h3>
+    <p class="mn-note" style="margin: 0 0 0.75rem;">Steady-state yearly figures with current slider values. For multi-year projection see the 5-year outlook tab.</p>
+    <div class="mn-pl" id="A_pl"></div>
+  </div>
+
+  <div id="panel-B" class="mn-panel" style="display:none">
+
+    <div class="mn-summary" id="B_summary"></div>
+
+    <div class="mn-mode" id="mode-B">
+      <button class="active" data-mode="retail">Retail-ready vapes</button>
+      <button data-mode="bulk">Bulk oil to manufacturers</button>
+    </div>
+
+    <div class="mn-grid2">
+      <div class="mn-section">
+        <h4>Yield & price</h4>
+        <div class="mn-row"><label>Fresh-frozen biomass (lbs)</label><input type="range" id="B_ff" min="3000" max="10000" step="250" value="7500"><div class="val" id="B_ff_v">7,500</div></div>
+        <div class="mn-row"><label>Extraction yield %</label><input type="range" id="B_pct" min="2" max="6" step="0.1" value="3.5"><div class="val" id="B_pct_v">3.5%</div></div>
+        <div class="mn-row"><label>Wholesale oil ($/g)</label><input type="range" id="B_price" min="6" max="20" step="0.5" value="12.5"><div class="val" id="B_price_v">$12.50</div></div>
+      </div>
+
+      <div class="mn-section">
+        <h4>MCS fees</h4>
+        <div class="mn-row"><label>Annual fee</label><input type="range" id="B_fee" min="0" max="200000" step="5000" value="150000"><div class="val" id="B_fee_v">$150k</div></div>
+        <div class="mn-row"><label>Monthly lease</label><input type="range" id="B_lease" min="0" max="3000" step="50" value="1250"><div class="val" id="B_lease_v">$1.25k</div></div>
+        <div class="mn-row"><label>Monthly admin</label><input type="range" id="B_admin" min="0" max="5000" step="100" value="2500"><div class="val" id="B_admin_v">$2.5k</div></div>
+        <div class="mn-row"><label>Processing ($/g)</label><input type="range" id="B_proc" min="1" max="5" step="0.1" value="2.5"><div class="val" id="B_proc_v">$2.50</div></div>
+      </div>
+
+      <div class="mn-section">
+        <h4>Lab testing <i class="mn-info" data-tip="MN OCM requires testing for potency, pesticides, heavy metals, microbials, mycotoxins, and residual solvents on every oil/concentrate batch before sale. The Blue Ox flyer lists 'Regulatory & Licensing' as a service but does not state whether lab testing fees are bundled in the $30k admin or charged separately. Conservative default: separate licensee cost. Confirm with MCS in writing."></i></h4>
+        <div class="mn-mode" id="lab-mode-B">
+          <button data-lab="separate" class="active">Separate licensee cost</button>
+          <button data-lab="included">Included in MCS fees</button>
+        </div>
+        <div class="mn-row"><label>Annual testing cost</label><input type="range" id="B_lab" min="5000" max="60000" step="2500" value="20000"><div class="val" id="B_lab_v">$20k</div></div>
+        <p class="mn-note">Oil/concentrate batches require residual solvent testing in addition to standard panels. Treated as COGS (deductible under §471) regardless of who pays.</p>
+      </div>
+
+      <div class="mn-section">
+        <h4>Post-processing operating costs</h4>
+        <div class="mn-row"><label>Vape hardware (carts)</label><input type="range" id="B_hw" min="0" max="450000" step="10000" value="300000"><div class="val" id="B_hw_v">$300k</div></div>
+        <div class="mn-row"><label>Packaging & labels</label><input type="range" id="B_pack" min="0" max="150000" step="5000" value="60000"><div class="val" id="B_pack_v">$60k</div></div>
+        <div class="mn-row"><label>Branding & marketing</label><input type="range" id="B_brand" min="0" max="150000" step="5000" value="65000"><div class="val" id="B_brand_v">$65k</div></div>
+        <div class="mn-row"><label>Sales operation</label><input type="range" id="B_sales" min="0" max="250000" step="5000" value="150000"><div class="val" id="B_sales_v">$150k</div></div>
+        <div class="mn-row"><label>Transportation</label><input type="range" id="B_trans" min="0" max="60000" step="2500" value="25000"><div class="val" id="B_trans_v">$25k</div></div>
+        <div class="mn-row"><label>Banking & payments</label><input type="range" id="B_bank" min="5000" max="60000" step="2500" value="35000"><div class="val" id="B_bank_v">$35k</div></div>
+        <div class="mn-row"><label>Insurance</label><input type="range" id="B_ins" min="15000" max="100000" step="2500" value="55000"><div class="val" id="B_ins_v">$55k</div></div>
+        <div class="mn-row"><label>Professional fees</label><input type="range" id="B_prof" min="20000" max="150000" step="5000" value="85000"><div class="val" id="B_prof_v">$85k</div></div>
+        <div class="mn-row"><label>Bad debt allowance</label><input type="range" id="B_debt" min="0" max="100000" step="2500" value="40000"><div class="val" id="B_debt_v">$40k</div></div>
+      </div>
+
+      <div class="mn-section">
+        <h4>Tax assumptions</h4>
+        <div class="mn-row"><label>Federal §280E rate <i class="mn-info" data-tip="IRC §280E denies cannabis businesses the operating-expense deductions other industries receive. Only COGS (cultivation, processing, packaging) stays deductible under §471. Federal tax is calculated on gross profit (revenue − COGS). Default: 21% (C-corp federal rate). Pass-through entities (LLC, S-corp) expose owners to individual rates of 24–37% on the same gross profit."></i></label><input type="range" id="B_280" min="0" max="40" step="1" value="21"><div class="val" id="B_280_v">21%</div></div>
+        <div class="mn-row"><label>MN state tax (decoupled) <i class="mn-info" data-tip="Minnesota DECOUPLES from §280E. Licensed cannabis businesses can claim a 'cannabis income tax subtraction' on their MN return for expenses §280E disallowed federally. So MN tax is calculated on real net income (after opex), not gross profit. Default: 9.8% (MN corporate franchise tax flat rate)."></i></label><input type="range" id="B_mn" min="0" max="15" step="0.1" value="9.8"><div class="val" id="B_mn_v">9.8%</div></div>
+      </div>
+    </div>
+
+    <h3 style="font-size:16px; font-weight:500; margin: 1.5rem 0 0.5rem;">Annual P&amp;L</h3>
+    <p class="mn-note" style="margin: 0 0 0.75rem;">Steady-state yearly figures with current slider values. For multi-year projection see the 5-year outlook tab.</p>
+    <div class="mn-pl" id="B_pl"></div>
+  </div>
+
+  <div id="panel-C" class="mn-panel" style="display:none">
+    <div class="mn-section" style="background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary);">
+      <h3>Annual P&amp;L — all four scenarios</h3>
+      <p class="mn-note" style="margin-bottom:12px">Single-year (steady-state) comparison. Channel-sensitive items (price, packaging, branding, sales operation, transport) use channel-specific defaults shown below. Everything else (yield, MCS fees, lab testing, insurance, banking, professional fees, bad debt, tax rates) uses your current slider values from the A and B tabs. For multi-year projection, see the 5-year outlook tab.</p>
+      <div id="C_compare"></div>
+    </div>
+    <div class="mn-section" style="background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary);">
+      <h3>Annual return on $150k MCS fee</h3>
+      <div id="C_roi"></div>
+    </div>
+    <div class="mn-section" style="background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary);">
+      <h3>Channel preset values used</h3>
+      <div id="C_presets"></div>
+    </div>
+  </div>
+
+  <div id="panel-D" class="mn-panel" style="display:none">
+    <div class="mn-section" style="background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary);">
+      <h3>5-year projection</h3>
+      <p class="mn-note" style="margin-bottom:12px"><strong>Year 1</strong> uses the slider values from the A and B tabs. <strong>Years 2–5</strong> apply the trajectories and year-1 setup haircuts below. <strong>All Blue Ox / MCS costs are locked at year-1 dollar values across all 5 years</strong> — the annual fee, lease, admin, and trim/processing total stay flat regardless of yield growth or price changes. Volume-scaling licensee-side costs (packaging units, transportation, vape hardware) auto-adjust with yield. The MCS escalator slider lets you stress-test contract escalation if you want to.</p>
+
+      <div class="mn-mode" id="yr5-pathway-mode">
+        <button data-yr5path="A_retail" class="active">A · Retail flower</button>
+        <button data-yr5path="A_bulk">A · Bulk flower</button>
+        <button data-yr5path="B_retail">B · Retail vapes</button>
+        <button data-yr5path="B_bulk">B · Bulk oil</button>
+      </div>
+
+      <div id="D_mcs_lock"></div>
+      <div id="D_table"></div>
+    </div>
+
+    <div class="mn-grid2">
+      <div class="mn-section">
+        <h4>Year-over-year trajectory</h4>
+        <div class="mn-row"><label>Wholesale price YoY</label><input type="range" id="D_price_yoy" min="-25" max="10" step="1" value="-10"><div class="val" id="D_price_yoy_v">-10%</div></div>
+        <div class="mn-row"><label>Yield YoY</label><input type="range" id="D_yield_yoy" min="-15" max="15" step="1" value="5"><div class="val" id="D_yield_yoy_v">+5%</div></div>
+        <p class="mn-note"><strong>MCS-provided costs locked flat:</strong> annual fee ($150k), lease ($1,250/mo), admin ($2,500/mo), trim ($150/lb), and processing ($2.50/g) all hold steady across years 1–5. This matches the flyer's stated rates (no escalator language). Confirm with MCS that the contract has no annual increase clauses or CPI adjustments.</p>
+        <p class="mn-note">Default trajectory: maturing MN market with wholesale price compression and modest yield growth from operational learning. <strong>MCS escalator default 0%</strong> matches the assumption that Blue Ox costs stay flat in dollar terms — increase the slider to stress-test what happens if the contract has an escalator clause.</p>
+      </div>
+
+      <div class="mn-section">
+        <h4>Year-1 setup haircut <i class="mn-info" data-tip="Year 1 includes one-time costs that do not repeat at the same scale: brand identity and package design, entity formation legal work, initial application support, dispensary account prospecting, and trade show debut. These haircuts apply to years 2–5 only."></i></h4>
+        <div class="mn-row"><label>Brand & marketing cut</label><input type="range" id="D_brand_cut" min="0" max="80" step="5" value="60"><div class="val" id="D_brand_cut_v">60%</div></div>
+        <div class="mn-row"><label>Professional fees cut</label><input type="range" id="D_prof_cut" min="0" max="60" step="5" value="35"><div class="val" id="D_prof_cut_v">35%</div></div>
+        <div class="mn-row"><label>Sales operation cut</label><input type="range" id="D_sales_cut" min="0" max="50" step="5" value="20"><div class="val" id="D_sales_cut_v">20%</div></div>
+        <p class="mn-note">Brand: logo/package design done once. Prof fees: entity setup, application support, initial counsel. Sales: heavier first-year prospecting and account establishment.</p>
+      </div>
+    </div>
+
+    <div class="mn-section" style="background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary);">
+      <h3>5-year cumulative</h3>
+      <div id="D_cumulative"></div>
+    </div>
+  </div>
+
+  <div id="panel-E" class="mn-panel" style="display:none">
+
+    <div class="mn-section" style="background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary);">
+      <h3>References &amp; data sources</h3>
+      <p class="mn-note" style="margin-bottom:0">Every assumption used in this calculator, organized by category. Online sources include direct links. <span class="ap-handout">Handout</span> indicates a value taken directly from the Blue Ox Cultivation Campus / Minnesota Cannabis Services marketing flyers (two-page printed handout, 2026 season). <span class="ap-estimate">Industry estimate</span> indicates a benchmark drawn from cannabis industry consultant guidance and operator interviews; verify against current quotes before relying on for budgeting.</p>
+    </div>
+
+    <div class="mn-section">
+      <h4>Blue Ox / MCS contracted figures</h4>
+      <ul class="ap-list">
+        <li><strong>$150,000 annual fee</strong> — fixed annual payment to MCS for management services <span class="ap-handout">Handout</span></li>
+        <li><strong>$1,250/month base lease rate</strong> — for 150' × 300' cultivation plot <span class="ap-handout">Handout</span></li>
+        <li><strong>$2,500/month full managed services</strong> — admin/HR/compliance bundle <span class="ap-handout">Handout</span></li>
+        <li><strong>$150/lb trim cost</strong> — Pathway A processing labor <span class="ap-handout">Handout</span></li>
+        <li><strong>$2.50/gram processing cost</strong> — Pathway B extraction labor <span class="ap-handout">Handout</span></li>
+        <li><strong>1,500 lbs dried flower yield projection</strong> — Pathway A annual canopy output <span class="ap-handout">Handout</span></li>
+        <li><strong>7,500 lbs fresh-frozen biomass</strong> — Pathway B annual canopy output <span class="ap-handout">Handout</span></li>
+        <li><strong>3.5% extraction yield</strong> — fresh-frozen biomass to oil conversion <span class="ap-handout">Handout</span></li>
+        <li><strong>$900/lb wholesale flower price</strong> — projected market analysis <span class="ap-handout">Handout</span></li>
+        <li><strong>$12.50/gram wholesale oil price</strong> — projected market analysis <span class="ap-handout">Handout</span></li>
+        <li><strong>Site infrastructure specs</strong> — 26 cultivation rows (275' × 3'), 6' hardened perimeter, 1080p+ HD security cameras, 90-day DVR, grid redundancy, multi-point access controls <span class="ap-handout">Handout</span></li>
+        <li><strong>Operational leadership credentials</strong> — Macormic, Guelich, Marr, Grossman-Crist, Kelly biographies <span class="ap-handout">Handout</span></li>
+      </ul>
+    </div>
+
+    <div class="mn-section">
+      <h4>Minnesota licensing &amp; regulatory framework</h4>
+      <ul class="ap-list">
+        <li><a href="https://mn.gov/ocm/businesses/licensing/license-types.jsp" target="_blank" rel="noopener">Minnesota Office of Cannabis Management — License Types</a> — license categories, fees, application process</li>
+        <li><a href="https://mn.gov/ocm/businesses/licensing/process/" target="_blank" rel="noopener">MN OCM — Cannabis Business License Application Process</a> — application review and qualifications guidance</li>
+        <li><a href="https://mn.gov/ocm/businesses/licensing/" target="_blank" rel="noopener">MN OCM — General Licensing</a> — overview of capped vs uncapped license types and lottery process</li>
+        <li><a href="https://www.revisor.mn.gov/statutes/cite/342" target="_blank" rel="noopener">Minnesota Statutes Chapter 342</a> — cannabis regulatory framework, ownership requirements, true-party-of-interest rules</li>
+        <li><a href="https://www.pca.state.mn.us/business-with-us/minnesota-cannabis-business-resources" target="_blank" rel="noopener">MN Pollution Control Agency — Cannabis Business Resources</a> — environmental permits and compliance</li>
+        <li><a href="https://www.mda.state.mn.us/plants/hemp/firsttimeapplicants" target="_blank" rel="noopener">MN Department of Agriculture — Hemp Program</a> — hemp licensing context (separate from adult-use cannabis)</li>
+      </ul>
+    </div>
+
+    <div class="mn-section">
+      <h4>Tax framework — MN &amp; federal</h4>
+      <ul class="ap-list">
+        <li><a href="https://www.revenue.state.mn.us/cannabis-income-tax-subtraction" target="_blank" rel="noopener">MN Department of Revenue — Cannabis Income Tax Subtraction</a> — primary source for Minnesota's decoupling from §280E; allows licensed cannabis businesses to subtract operating expenses §280E disallowed federally</li>
+        <li><a href="https://www.revenue.state.mn.us/cannabis-tax" target="_blank" rel="noopener">MN Department of Revenue — Cannabis Tax</a> — 15% gross receipts tax on retail sales (raised from 10% effective July 1, 2025)</li>
+        <li><a href="https://www.revisor.mn.gov/statutes/cite/295.81" target="_blank" rel="noopener">MN Statute § 295.81 — Cannabis Gross Receipts Tax</a> — statutory definition of taxable cannabis product retailer; confirms tax applies at retail only, not wholesale</li>
+        <li><a href="https://www.revenue.state.mn.us/guide/sales-7" target="_blank" rel="noopener">MN Department of Revenue — Cannabis Sales Tax Guide</a> — wholesale resale exemption (Form ST3), 6.875% state sales tax, mandated testing services exemption</li>
+        <li><a href="https://www.house.mn.gov/hrd/pubs/ss/sscorpft.pdf" target="_blank" rel="noopener">MN House Research — Corporate Franchise Tax</a> — confirms flat 9.8% corporate franchise tax rate on Minnesota taxable income (PDF)</li>
+        <li><a href="https://www.revenue.state.mn.us/corporation-franchise-tax" target="_blank" rel="noopener">MN Department of Revenue — Corporation Franchise Tax</a> — applies to C-corps; starting point is federal taxable income</li>
+        <li><a href="https://www.revenue.state.mn.us/cannabis-business-tax-payments" target="_blank" rel="noopener">MN Department of Revenue — Cannabis Business Tax Payments</a> — filing requirements, electronic payment waiver for businesses without banking access</li>
+        <li><a href="https://taxfoundation.org/data/all/state/recreational-marijuana-taxes/" target="_blank" rel="noopener">Tax Foundation — 2026 Recreational Marijuana Taxes by State</a> — confirms MN rate increase from 10% to 15% in 2025</li>
+        <li><a href="https://www.andretaxco.com/minnesota-cannabis-280e" target="_blank" rel="noopener">AndreTaxCo — Minnesota Cannabis &amp; §280E</a> — confirms federal §280E applies; MN provides offsetting subtraction</li>
+        <li><a href="https://cannabiscpa.tax/2025-minnesota-cannabis-reference-guide/" target="_blank" rel="noopener">CannabisCPA.tax — 2025 Minnesota Cannabis Reference Guide</a> — practical CPA-side guidance on filings, COGS treatment, and audit triggers</li>
+        <li><a href="https://greengrowthcpas.com/minnesota-cannabis-taxes-avoid-these-costly-pitfalls-in-2025/" target="_blank" rel="noopener">GreenGrowth CPAs — MN Cannabis Tax Pitfalls</a> — operator-facing summary of §280E exposure and entity structure considerations</li>
+      </ul>
+    </div>
+
+    <div class="mn-section">
+      <h4>Microbusiness license guidance &amp; market context</h4>
+      <ul class="ap-list">
+        <li><a href="https://catalyst-bc.com/minnesota-cannabis-licensing-opportunities/" target="_blank" rel="noopener">Catalyst BC — MN Cannabis Licensing 2026</a> — current market context, supply gap, build-out cost benchmarks ($300–$450/sq ft indoor cultivation)</li>
+        <li><a href="https://canndelta.com/us/minnesota/" target="_blank" rel="noopener">CannDelta — Minnesota Cannabis Cultivation License &amp; Types</a> — license-type comparison, fees, allowed activities for microbusiness vs mezzobusiness</li>
+        <li><a href="https://quantum9.net/cannabis-microbusiness-license-in-minnesota/" target="_blank" rel="noopener">Quantum 9 — Cannabis Microbusiness License in Minnesota</a> — application requirements, social equity verification, fee structure</li>
+        <li><a href="https://quantum9.net/minnesota-cannabis-business-licenses/" target="_blank" rel="noopener">Quantum 9 — MN Cannabis Business Licenses Overview</a> — authorized activities by license type, including wholesaler distinction</li>
+        <li><a href="https://www.flourishsoftware.com/states/minnesota" target="_blank" rel="noopener">Flourish Software — Minnesota State Page</a> — wholesaler license activities, transporter requirements, microbusiness scope</li>
+        <li><a href="https://www.garnerlegal.com/mn-cannabis-microbusiness-licensing-operations/" target="_blank" rel="noopener">Garner Legal — MN Cannabis Microbusiness Licensing &amp; Operations</a> — authorized actions, on-site consumption rules, retail limitations</li>
+        <li><a href="https://cannabiscultivationconsulting.com/minnesota/" target="_blank" rel="noopener">Cannabis Cultivation Consulting — Minnesota</a> — buildout cost benchmarks (~$350/sq ft for warehouse retrofit)</li>
+        <li><a href="https://minnesotacannabislicense.com/minnesota-cannabis-microbusiness-license-requirements/" target="_blank" rel="noopener">Minnesota Cannabis License — Microbusiness Requirements</a> — uncapped license details, ownership stacking limits (10% rule)</li>
+        <li><a href="https://canndelta.com/minnesotas-cannabis-microbusiness-license/" target="_blank" rel="noopener">CannDelta — MN Microbusiness Step-by-Step Guide</a> — application timeline, cultivation/processing/retail scope</li>
+        <li><a href="https://catalyst-bc.com/cannabis-microbusiness-license-in-minnesota-a-comprehensive-guide/" target="_blank" rel="noopener">Catalyst BC — MN Microbusiness Comprehensive Guide</a> — approved activities, social equity threshold (65%)</li>
+        <li><a href="https://mncannabishub.com/news/minnesota-cannabis-tax-guide-2026" target="_blank" rel="noopener">MN Cannabis Hub — 2026 Tax Guide</a> — consumer pricing math, tribal dispensary alternative, retail-to-wholesale price flow</li>
+      </ul>
+    </div>
+
+    <div class="mn-section">
+      <h4>Distribution &amp; wholesale market</h4>
+      <ul class="ap-list">
+        <li><a href="https://www.boxes.market/" target="_blank" rel="noopener">Boxes — MN Cannabis Distributor &amp; Wholesale Marketplace</a> — full-service B2B marketplace; alternative to direct dispensary sales for licensees without sales infrastructure</li>
+      </ul>
+    </div>
+
+    <div class="mn-section">
+      <h4>Operational cost estimates (industry benchmarks)</h4>
+      <p class="mn-note" style="margin-top:0">Default slider values for non-MCS costs are drawn from cannabis industry consultant guidance and typical operator quotes. These are <span class="ap-estimate">industry estimate</span> ranges intended as conservative starting points for modeling — they should be replaced with actual quotes before commitment.</p>
+      <ul class="ap-list">
+        <li><strong>Lab testing</strong>: ~$400–700 per flower batch (10–25 lb batches), ~$300–500 per oil batch, plus retest fees on failed batches <span class="ap-estimate">Industry estimate</span></li>
+        <li><strong>Packaging — retail-ready flower</strong>: $0.30–1.50 per eighth bag/jar; $5–15k/year labels and printing <span class="ap-estimate">Industry estimate</span></li>
+        <li><strong>Vape hardware</strong>: $1.50–3.50 per 1g cartridge plus boxes; major Pathway B cost driver <span class="ap-estimate">Industry estimate</span></li>
+        <li><strong>Branding &amp; marketing</strong>: $40–120k year 1 (brand identity, package design, photography, sell sheets), $25–80k ongoing <span class="ap-estimate">Industry estimate</span></li>
+        <li><strong>Sales operation</strong>: $60–90k base + 5–10% commission for in-house rep, or 10–15% of revenue for broker/agency <span class="ap-estimate">Industry estimate</span></li>
+        <li><strong>Transportation</strong>: $1.50–3.00 per mile + per-stop fees through licensed cannabis transporters; $20–35k/year typical for statewide weekly deliveries <span class="ap-estimate">Industry estimate</span></li>
+        <li><strong>Cannabis-friendly banking</strong>: $300–1,500/month account fees plus payment processing 1–3% of B2B transactions <span class="ap-estimate">Industry estimate</span></li>
+        <li><strong>Insurance (licensee-side)</strong>: $30–75k/year combined (product liability, general liability, D&amp;O, cyber, surety bond) <span class="ap-estimate">Industry estimate</span></li>
+        <li><strong>Professional services</strong>: $50–115k/year (cannabis attorney, §280E-savvy CPA, cannabis bookkeeper, software) <span class="ap-estimate">Industry estimate</span></li>
+        <li><strong>Bad debt allowance</strong>: 5–10% of receivables given net-30 to net-60 dispensary payment terms <span class="ap-estimate">Industry estimate</span></li>
+        <li><strong>Build-out cost benchmarks (not modeled — Blue Ox provides facility)</strong>: $300–450/sq ft indoor cultivation buildout, $1.5–3.5M total facility cost for a comparable standalone microbusiness <span class="ap-estimate">Industry estimate</span></li>
+      </ul>
+    </div>
+
+    <div class="mn-section">
+      <h4>Federal tax — §280E framework</h4>
+      <ul class="ap-list">
+        <li><a href="https://www.law.cornell.edu/uscode/text/26/280E" target="_blank" rel="noopener">26 U.S.C. § 280E</a> — statute denying business expense deductions for trafficking in controlled substances (cannabis remains Schedule I federally)</li>
+        <li><a href="https://www.law.cornell.edu/uscode/text/26/471" target="_blank" rel="noopener">26 U.S.C. § 471</a> — inventory accounting rules; basis for COGS treatment that remains deductible despite §280E</li>
+        <li><strong>C-corp federal rate: 21% flat</strong> — Tax Cuts and Jobs Act of 2017 (TCJA), permanent for corporate income tax</li>
+        <li><strong>Pass-through structures (LLC, S-corp)</strong>: owner pays federal tax at individual rates 24–37% on disallowed amounts; substantially worse §280E exposure than C-corp</li>
+      </ul>
+    </div>
+
+    <div class="mn-section">
+      <h4>Methodology notes</h4>
+      <ul class="ap-list">
+        <li><strong>5-year MCS cost lock</strong>: Per user-supplied assumption that Blue Ox costs remain flat over 5 years, the entire MCS bucket (annual fee + lease + admin + trim/processing) is held at year-1 dollar values across all 5 years. The MCS escalator slider lets you stress-test contract escalation if applicable.</li>
+        <li><strong>Year-1 setup haircut</strong>: Brand &amp; marketing (60%), professional fees (35%), and sales operation (20%) are reduced for years 2–5 to reflect one-time setup costs (logo design, package design, entity formation, application support, account prospecting).</li>
+        <li><strong>Volume scaling</strong>: Packaging units, transportation, vape hardware (B-retail), and bad debt allowance scale with yield/revenue year-over-year. Lab testing, lease, admin, insurance, banking, and most professional fees stay flat.</li>
+        <li><strong>Tax treatment</strong>: Federal §280E applied to gross profit (revenue − COGS). MN state tax applied to real net income (revenue − COGS − opex) per MN cannabis income tax subtraction. 15% MN cannabis gross receipts tax is retail-only and does NOT apply to wholesale operations modeled here.</li>
+      </ul>
+    </div>
+
+    <div class="mn-section">
+      <h4>Disclaimers</h4>
+      <p class="mn-note" style="margin-top:0">This calculator is a planning tool, not legal, tax, or financial advice. Outputs reflect user-supplied assumptions and publicly available regulatory information as of April 2026. Cannabis regulation changes frequently; verify all rates, license terms, and structural requirements with Minnesota cannabis counsel and a §280E-savvy CPA before relying on outputs for capital commitment. Blue Ox / MCS figures are taken from marketing materials and have not been independently verified — request the actual management services agreement and contract terms before signing any LOI.</p>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var fmt = function(n){ if (!isFinite(n)) n = 0; var s = n < 0 ? '-' : ''; n = Math.abs(Math.round(n)); return s + '$' + n.toLocaleString(); };
+  var fmtK = function(n){ if (!isFinite(n)) n = 0; var s = n < 0 ? '-' : ''; n = Math.abs(n); if (n >= 1000000) return s + '$' + (n/1000000).toFixed(2) + 'M'; if (n >= 1000) return s + '$' + Math.round(n/1000) + 'k'; return s + '$' + Math.round(n); };
+  var fmtN = function(n){ return Math.round(n).toLocaleString(); };
+
+  var tip280E = 'IRC §280E denies cannabis businesses the operating-expense deductions other industries receive. Cost of goods sold (cultivation, processing, packaging) stays deductible under §471, but sales, marketing, transport, insurance, banking, and professional fees do not. Federal tax is calculated on gross profit, not real profit — often producing a tax bill larger than your actual cash profit.';
+  var infoIcon = '<i class="mn-info" data-tip="' + tip280E + '"></i>';
+
+  // wire up sliders with display formatting
+  var setupSlider = function(id, fmtFn){
+    var el = document.getElementById(id);
+    var v = document.getElementById(id + '_v');
+    if (!el || !v) return;
+    var update = function(){
+      var n = parseFloat(el.value);
+      v.textContent = fmtFn(n);
+      compute();
+    };
+    el.addEventListener('input', update);
+    update();
+  };
+
+  // mode toggles
+  var modeA = 'retail', modeB = 'retail';
+  var labModeA = 'separate', labModeB = 'separate';
+  document.querySelectorAll('#mode-A button').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('#mode-A button').forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active');
+      modeA = b.dataset.mode;
+      // adjust packaging/sales defaults when switching
+      if (modeA === 'bulk') {
+        setVal('A_pack', 15000); setVal('A_brand', 10000); setVal('A_sales', 60000); setVal('A_price', 650);
+      } else {
+        setVal('A_pack', 100000); setVal('A_brand', 50000); setVal('A_sales', 130000); setVal('A_price', 900);
+      }
+      compute();
+    });
+  });
+  document.querySelectorAll('#lab-mode-A button').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('#lab-mode-A button').forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active');
+      labModeA = b.dataset.lab;
+      compute();
+    });
+  });
+  document.querySelectorAll('#lab-mode-B button').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('#lab-mode-B button').forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active');
+      labModeB = b.dataset.lab;
+      compute();
+    });
+  });
+  document.querySelectorAll('#mode-B button').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('#mode-B button').forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active');
+      modeB = b.dataset.mode;
+      if (modeB === 'bulk') {
+        setVal('B_hw', 0); setVal('B_pack', 12000); setVal('B_brand', 15000); setVal('B_sales', 70000); setVal('B_price', 7);
+      } else {
+        setVal('B_hw', 300000); setVal('B_pack', 60000); setVal('B_brand', 65000); setVal('B_sales', 150000); setVal('B_price', 12.5);
+      }
+      compute();
+    });
+  });
+
+  function setVal(id, v){
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.value = v;
+    var disp = document.getElementById(id + '_v');
+    if (disp) {
+      // re-trigger the input listener
+      el.dispatchEvent(new Event('input'));
+    }
+  }
+
+  // 5-year pathway selector
+  var yr5Path = 'A_retail';
+  document.querySelectorAll('#yr5-pathway-mode button').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('#yr5-pathway-mode button').forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active');
+      yr5Path = b.dataset.yr5path;
+      render5yr();
+    });
+  });
+
+  // tabs
+  document.querySelectorAll('.mn-tab').forEach(function(t){
+    t.addEventListener('click', function(){
+      document.querySelectorAll('.mn-tab').forEach(function(x){ x.classList.remove('active'); });
+      t.classList.add('active');
+      var which = t.dataset.tab;
+      ['A','B','C','D','E'].forEach(function(p){
+        document.getElementById('panel-' + p).style.display = (p === which) ? '' : 'none';
+      });
+      if (which === 'C') renderCompare();
+      if (which === 'D') render5yr();
+    });
+  });
+
+  // formatters per slider
+  var dollars = function(n){ return fmtK(n); };
+  var dollarsExact = function(n){ return '$' + Math.round(n).toLocaleString(); };
+  var percent = function(n){ return n.toFixed(1) + '%'; };
+  var percentInt = function(n){ return Math.round(n) + '%'; };
+  var perGram = function(n){ return '$' + n.toFixed(2); };
+  var perLb = function(n){ return '$' + Math.round(n); };
+  var thousands = function(n){ return Math.round(n).toLocaleString(); };
+
+  // Pathway A sliders
+  setupSlider('A_yield', thousands);
+  setupSlider('A_price', perLb);
+  setupSlider('A_fee', dollars);
+  setupSlider('A_lease', dollars);
+  setupSlider('A_admin', dollars);
+  setupSlider('A_trim', perLb);
+  setupSlider('A_lab', dollars);
+  setupSlider('A_pack', dollars);
+  setupSlider('A_brand', dollars);
+  setupSlider('A_sales', dollars);
+  setupSlider('A_trans', dollars);
+  setupSlider('A_bank', dollars);
+  setupSlider('A_ins', dollars);
+  setupSlider('A_prof', dollars);
+  setupSlider('A_debt', dollars);
+  setupSlider('A_280', percentInt);
+  setupSlider('A_mn', percent);
+
+  // Pathway B sliders
+  setupSlider('B_ff', thousands);
+  setupSlider('B_pct', percent);
+  setupSlider('B_price', perGram);
+  setupSlider('B_fee', dollars);
+  setupSlider('B_lease', dollars);
+  setupSlider('B_admin', dollars);
+  setupSlider('B_proc', perGram);
+  setupSlider('B_lab', dollars);
+  setupSlider('B_hw', dollars);
+  setupSlider('B_pack', dollars);
+  setupSlider('B_brand', dollars);
+  setupSlider('B_sales', dollars);
+  setupSlider('B_trans', dollars);
+  setupSlider('B_bank', dollars);
+  setupSlider('B_ins', dollars);
+  setupSlider('B_prof', dollars);
+  setupSlider('B_debt', dollars);
+  setupSlider('B_280', percentInt);
+  setupSlider('B_mn', percent);
+
+  // 5-year sliders
+  var pctSigned = function(n){ return (n >= 0 ? '+' : '') + n + '%'; };
+  setupSlider('D_price_yoy', pctSigned);
+  setupSlider('D_yield_yoy', pctSigned);
+  setupSlider('D_brand_cut', percentInt);
+  setupSlider('D_prof_cut', percentInt);
+  setupSlider('D_sales_cut', percentInt);
+
+  function v(id){ var el = document.getElementById(id); return el ? parseFloat(el.value) : 0; }
+
+  function calcA(){
+    var yield_lbs = v('A_yield');
+    var price = v('A_price');
+    var revenue = yield_lbs * price;
+
+    // MCS fees (these are arguably COGS; treat as such for §280E)
+    var fee = v('A_fee');
+    var lease = v('A_lease') * 12;
+    var admin = v('A_admin') * 12;
+    var trim = v('A_trim') * yield_lbs;
+    var mcs_total = fee + lease + admin + trim;
+
+    // Lab testing — direct production cost, COGS-eligible. Zeroed if bundled in MCS fees.
+    var lab = labModeA === 'included' ? 0 : v('A_lab');
+    // Packaging — direct product cost, COGS-eligible
+    var pack = v('A_pack');
+
+    var cogs = mcs_total + lab + pack;
+    var grossProfit = revenue - cogs;
+
+    // Non-deductible under §280E (in practice often disallowed)
+    var brand = v('A_brand');
+    var sales = v('A_sales');
+    var trans = v('A_trans');
+    var bank = v('A_bank');
+    var ins = v('A_ins');
+    var prof = v('A_prof');
+    var debt = v('A_debt');
+    var opex_280E = brand + sales + trans + bank + ins + prof + debt;
+
+    var realPretax = grossProfit - opex_280E;
+
+    // §280E tax: applied to gross profit (federal only — MN decouples)
+    var fedTax = Math.max(0, grossProfit * v('A_280') / 100);
+    // MN cannabis income tax subtraction: state tax applies to real pre-tax profit
+    var stateTax = Math.max(0, realPretax * v('A_mn') / 100);
+    var totalTax = fedTax + stateTax;
+
+    var afterTax = realPretax - totalTax;
+
+    return {
+      revenue: revenue, cogs: cogs, mcs_total: mcs_total,
+      mcs_fee: fee, mcs_lease: lease, mcs_admin: admin, mcs_trim: trim,
+      lab: lab, pack: pack,
+      grossProfit: grossProfit, opex: opex_280E,
+      brand: brand, sales: sales, trans: trans, bank: bank, ins: ins, prof: prof, debt: debt,
+      realPretax: realPretax, fedTax: fedTax, stateTax: stateTax, totalTax: totalTax,
+      afterTax: afterTax
+    };
+  }
+
+  function calcB(){
+    var ff = v('B_ff');
+    var pct = v('B_pct') / 100;
+    var grams = ff * 453.592 * pct;
+    var price = v('B_price');
+    var revenue = grams * price;
+
+    var fee = v('B_fee');
+    var lease = v('B_lease') * 12;
+    var admin = v('B_admin') * 12;
+    var proc = v('B_proc') * grams;
+    var mcs_total = fee + lease + admin + proc;
+
+    var lab = labModeB === 'included' ? 0 : v('B_lab');
+    var hw = v('B_hw');
+    var pack = v('B_pack');
+
+    var cogs = mcs_total + lab + hw + pack;
+    var grossProfit = revenue - cogs;
+
+    var brand = v('B_brand');
+    var sales = v('B_sales');
+    var trans = v('B_trans');
+    var bank = v('B_bank');
+    var ins = v('B_ins');
+    var prof = v('B_prof');
+    var debt = v('B_debt');
+    var opex_280E = brand + sales + trans + bank + ins + prof + debt;
+
+    var realPretax = grossProfit - opex_280E;
+    var fedTax = Math.max(0, grossProfit * v('B_280') / 100);
+    var stateTax = Math.max(0, realPretax * v('B_mn') / 100);
+    var totalTax = fedTax + stateTax;
+    var afterTax = realPretax - totalTax;
+
+    return {
+      grams: grams, revenue: revenue, cogs: cogs, mcs_total: mcs_total,
+      mcs_fee: fee, mcs_lease: lease, mcs_admin: admin, mcs_proc: proc,
+      lab: lab, hw: hw, pack: pack,
+      grossProfit: grossProfit, opex: opex_280E,
+      brand: brand, sales: sales, trans: trans, bank: bank, ins: ins, prof: prof, debt: debt,
+      realPretax: realPretax, fedTax: fedTax, stateTax: stateTax, totalTax: totalTax,
+      afterTax: afterTax
+    };
+  }
+
+  function renderSummary(r, mountId){
+    var el = document.getElementById(mountId);
+    var cls = r.afterTax >= 0 ? 'success' : 'danger';
+    var pretaxCls = r.realPretax >= 0 ? '' : 'danger';
+    el.innerHTML = '' +
+      '<div class="mn-stat"><div class="lbl">Revenue</div><div class="num">' + fmtK(r.revenue) + '</div></div>' +
+      '<div class="mn-stat"><div class="lbl">MCS take</div><div class="num">' + fmtK(r.mcs_total) + '</div><div class="sub">' + Math.round(r.mcs_total/r.revenue*100) + '% of revenue</div></div>' +
+      '<div class="mn-stat ' + pretaxCls + '"><div class="lbl">Real pre-tax profit</div><div class="num">' + fmtK(r.realPretax) + '</div></div>' +
+      '<div class="mn-stat ' + cls + '"><div class="lbl">After-tax cash</div><div class="num">' + fmtK(r.afterTax) + '</div><div class="sub">tax: ' + fmtK(r.totalTax) + '</div></div>';
+  }
+
+  function renderPL_A(r){
+    var html = '<table>';
+    html += '<tr><td>Revenue</td><td>' + fmt(r.revenue) + '</td></tr>';
+    html += '<tr class="major"><td>MCS fees & services</td><td>' + fmt(r.mcs_total) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Annual fee</td><td>' + fmt(r.mcs_fee) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Lease (annual)</td><td>' + fmt(r.mcs_lease) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Admin (annual)</td><td>' + fmt(r.mcs_admin) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Trim labor</td><td>' + fmt(r.mcs_trim) + '</td></tr>';
+    html += '<tr><td>Lab testing</td><td>' + (labModeA === 'included' ? '<span style="color: var(--color-text-tertiary); font-weight:400;">included in MCS</span>' : fmt(r.lab)) + '</td></tr>';
+    html += '<tr><td>Packaging</td><td>' + fmt(r.pack) + '</td></tr>';
+    html += '<tr class="total"><td>= Gross profit (basis for §280E tax) ' + infoIcon + '</td><td>' + fmt(r.grossProfit) + '</td></tr>';
+    html += '<tr class="major"><td>Operating expenses (§280E non-deductible) ' + infoIcon + '</td><td>' + fmt(r.opex) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Branding & marketing</td><td>' + fmt(r.brand) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Sales operation</td><td>' + fmt(r.sales) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Transportation</td><td>' + fmt(r.trans) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Banking & payments</td><td>' + fmt(r.bank) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Insurance</td><td>' + fmt(r.ins) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Professional fees</td><td>' + fmt(r.prof) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Bad debt allowance</td><td>' + fmt(r.debt) + '</td></tr>';
+    html += '<tr class="total"><td>= Real pre-tax profit</td><td>' + fmt(r.realPretax) + '</td></tr>';
+    html += '<tr class="deduction"><td>Federal tax (§280E on gross profit) ' + infoIcon + '</td><td>−' + fmt(r.fedTax) + '</td></tr>';
+    html += '<tr class="deduction"><td>MN state tax (on real net income, decoupled)</td><td>−' + fmt(r.stateTax) + '</td></tr>';
+    html += '<tr class="total"><td>= After-tax cash to owner</td><td>' + fmt(r.afterTax) + '</td></tr>';
+    html += '</table>';
+    document.getElementById('A_pl').innerHTML = html;
+  }
+
+  function renderPL_B(r){
+    var html = '<table>';
+    html += '<tr><td>Oil produced (g)</td><td>' + fmtN(r.grams) + ' g</td></tr>';
+    html += '<tr><td>Revenue</td><td>' + fmt(r.revenue) + '</td></tr>';
+    html += '<tr class="major"><td>MCS fees & services</td><td>' + fmt(r.mcs_total) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Annual fee</td><td>' + fmt(r.mcs_fee) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Lease (annual)</td><td>' + fmt(r.mcs_lease) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Admin (annual)</td><td>' + fmt(r.mcs_admin) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Processing labor</td><td>' + fmt(r.mcs_proc) + '</td></tr>';
+    html += '<tr><td>Lab testing</td><td>' + (labModeB === 'included' ? '<span style="color: var(--color-text-tertiary); font-weight:400;">included in MCS</span>' : fmt(r.lab)) + '</td></tr>';
+    html += '<tr><td>Vape hardware</td><td>' + fmt(r.hw) + '</td></tr>';
+    html += '<tr><td>Packaging</td><td>' + fmt(r.pack) + '</td></tr>';
+    html += '<tr class="total"><td>= Gross profit (basis for §280E tax) ' + infoIcon + '</td><td>' + fmt(r.grossProfit) + '</td></tr>';
+    html += '<tr class="major"><td>Operating expenses (§280E non-deductible) ' + infoIcon + '</td><td>' + fmt(r.opex) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Branding & marketing</td><td>' + fmt(r.brand) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Sales operation</td><td>' + fmt(r.sales) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Transportation</td><td>' + fmt(r.trans) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Banking & payments</td><td>' + fmt(r.bank) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Insurance</td><td>' + fmt(r.ins) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Professional fees</td><td>' + fmt(r.prof) + '</td></tr>';
+    html += '<tr class="subtle"><td>– Bad debt allowance</td><td>' + fmt(r.debt) + '</td></tr>';
+    html += '<tr class="total"><td>= Real pre-tax profit</td><td>' + fmt(r.realPretax) + '</td></tr>';
+    html += '<tr class="deduction"><td>Federal tax (§280E on gross profit) ' + infoIcon + '</td><td>−' + fmt(r.fedTax) + '</td></tr>';
+    html += '<tr class="deduction"><td>MN state tax (on real net income, decoupled)</td><td>−' + fmt(r.stateTax) + '</td></tr>';
+    html += '<tr class="total"><td>= After-tax cash to owner</td><td>' + fmt(r.afterTax) + '</td></tr>';
+    html += '</table>';
+    document.getElementById('B_pl').innerHTML = html;
+  }
+
+  // Channel presets — channel-sensitive cost overrides per scenario
+  var channelPresets = {
+    A_retail: { price: 900,  pack: 100000, brand: 50000, sales: 130000, trans: 25000, label: 'A · Retail-ready flower' },
+    A_bulk:   { price: 650,  pack: 15000,  brand: 10000, sales: 60000,  trans: 15000, label: 'A · Bulk flower' },
+    B_retail: { price: 12.5, pack: 60000,  brand: 65000, sales: 150000, trans: 25000, hw: 300000, label: 'B · Retail-ready vapes' },
+    B_bulk:   { price: 7,    pack: 12000,  brand: 15000, sales: 70000,  trans: 15000, hw: 0,      label: 'B · Bulk oil' },
+  };
+
+  // Compute Pathway A under a specific channel preset, using current slider values for the rest
+  function calcA_scenario(preset){
+    var yield_lbs = v('A_yield');
+    var price = preset.price;
+    var revenue = yield_lbs * price;
+    var fee = v('A_fee');
+    var lease = v('A_lease') * 12;
+    var admin = v('A_admin') * 12;
+    var trim = v('A_trim') * yield_lbs;
+    var mcs_total = fee + lease + admin + trim;
+    var lab = labModeA === 'included' ? 0 : v('A_lab');
+    var pack = preset.pack;
+    var cogs = mcs_total + lab + pack;
+    var grossProfit = revenue - cogs;
+    var brand = preset.brand;
+    var sales = preset.sales;
+    var trans = preset.trans;
+    var bank = v('A_bank');
+    var ins = v('A_ins');
+    var prof = v('A_prof');
+    var debt = v('A_debt');
+    var opex = brand + sales + trans + bank + ins + prof + debt;
+    var realPretax = grossProfit - opex;
+    var fedTax = Math.max(0, grossProfit * v('A_280') / 100);
+    var stateTax = Math.max(0, realPretax * v('A_mn') / 100);
+    var totalTax = fedTax + stateTax;
+    var afterTax = realPretax - totalTax;
+    return { revenue: revenue, mcs_total: mcs_total, otherCogs: lab + pack, grossProfit: grossProfit, opex: opex, realPretax: realPretax, totalTax: totalTax, afterTax: afterTax };
+  }
+
+  // Compute Pathway B under a specific channel preset
+  function calcB_scenario(preset){
+    var ff = v('B_ff');
+    var pct = v('B_pct') / 100;
+    var grams = ff * 453.592 * pct;
+    var price = preset.price;
+    var revenue = grams * price;
+    var fee = v('B_fee');
+    var lease = v('B_lease') * 12;
+    var admin = v('B_admin') * 12;
+    var proc = v('B_proc') * grams;
+    var mcs_total = fee + lease + admin + proc;
+    var lab = labModeB === 'included' ? 0 : v('B_lab');
+    var hw = preset.hw;
+    var pack = preset.pack;
+    var cogs = mcs_total + lab + hw + pack;
+    var grossProfit = revenue - cogs;
+    var brand = preset.brand;
+    var sales = preset.sales;
+    var trans = preset.trans;
+    var bank = v('B_bank');
+    var ins = v('B_ins');
+    var prof = v('B_prof');
+    var debt = v('B_debt');
+    var opex = brand + sales + trans + bank + ins + prof + debt;
+    var realPretax = grossProfit - opex;
+    var fedTax = Math.max(0, grossProfit * v('B_280') / 100);
+    var stateTax = Math.max(0, realPretax * v('B_mn') / 100);
+    var totalTax = fedTax + stateTax;
+    var afterTax = realPretax - totalTax;
+    return { revenue: revenue, mcs_total: mcs_total, otherCogs: lab + hw + pack, grossProfit: grossProfit, opex: opex, realPretax: realPretax, totalTax: totalTax, afterTax: afterTax };
+  }
+
+  function renderCompare(){
+    var scenarios = [
+      { key: 'A_retail', data: calcA_scenario(channelPresets.A_retail), label: channelPresets.A_retail.label },
+      { key: 'A_bulk',   data: calcA_scenario(channelPresets.A_bulk),   label: channelPresets.A_bulk.label },
+      { key: 'B_retail', data: calcB_scenario(channelPresets.B_retail), label: channelPresets.B_retail.label },
+      { key: 'B_bulk',   data: calcB_scenario(channelPresets.B_bulk),   label: channelPresets.B_bulk.label },
+    ];
+
+    var lineItems = [
+      { key: 'revenue',   label: 'Revenue' },
+      { key: 'mcs_total', label: 'MCS fees & services' },
+      { key: 'otherCogs', label: 'Other COGS' },
+      { key: 'grossProfit', label: 'Gross profit', emphasis: true },
+      { key: 'opex',      label: 'Post-grow opex (§280E)' + infoIcon },
+      { key: 'realPretax', label: 'Real pre-tax profit', emphasis: true },
+      { key: 'totalTax',  label: 'Total tax burden' },
+      { key: 'afterTax',  label: 'After-tax cash', emphasis: true, final: true },
+    ];
+
+    var html = '<table style="width:100%; font-size:13px; font-variant-numeric: tabular-nums; border-collapse: collapse; table-layout: fixed;">';
+    html += '<colgroup><col style="width: 28%"><col><col><col><col></colgroup>';
+    html += '<tr style="border-bottom: 0.5px solid var(--color-border-secondary);">';
+    html += '<td style="padding: 8px 4px; color: var(--color-text-secondary); font-size:11px;">Line item</td>';
+    scenarios.forEach(function(s){
+      html += '<td style="padding: 8px 4px; text-align:right; font-weight:500; font-size:11px; line-height:1.3;">' + s.label + '</td>';
+    });
+    html += '</tr>';
+
+    lineItems.forEach(function(li){
+      var border = li.emphasis ? 'border-top: 0.5px solid var(--color-border-tertiary);' : '';
+      var weight = li.emphasis ? 'font-weight:500;' : '';
+      var labelColor = li.emphasis ? '' : 'color: var(--color-text-secondary);';
+      html += '<tr style="' + border + '">';
+      html += '<td style="padding: 6px 4px; font-size:12px; ' + weight + ' ' + labelColor + '">' + li.label + '</td>';
+      scenarios.forEach(function(s){
+        var val = s.data[li.key];
+        var color = '';
+        if (li.final) color = (val >= 0) ? 'color: var(--color-text-success);' : 'color: var(--color-text-danger);';
+        html += '<td style="padding: 6px 4px; text-align:right; font-size:12px; ' + weight + ' ' + color + '">' + fmtK(val) + '</td>';
+      });
+      html += '</tr>';
+    });
+    html += '</table>';
+    document.getElementById('C_compare').innerHTML = html;
+
+    // ROI on $150k
+    var contribution = 150000;
+    var roiHtml = '<table style="width:100%; font-size:13px; font-variant-numeric: tabular-nums; table-layout: fixed;">';
+    roiHtml += '<colgroup><col style="width: 50%"><col style="width: 25%"><col style="width: 25%"></colgroup>';
+    roiHtml += '<tr style="border-bottom: 0.5px solid var(--color-border-tertiary);">' +
+               '<td style="padding: 6px 4px; font-size:11px; color: var(--color-text-secondary);">Scenario</td>' +
+               '<td style="padding: 6px 4px; text-align:right; font-size:11px; color: var(--color-text-secondary);">Annual after-tax cash</td>' +
+               '<td style="padding: 6px 4px; text-align:right; font-size:11px; color: var(--color-text-secondary);">Annual return on $150k fee</td></tr>';
+    scenarios.forEach(function(s){
+      var roi = s.data.afterTax / contribution * 100;
+      var color = (s.data.afterTax >= 0) ? 'color: var(--color-text-success);' : 'color: var(--color-text-danger);';
+      roiHtml += '<tr>' +
+                 '<td style="padding: 6px 4px; font-size:13px;">' + s.label + '</td>' +
+                 '<td style="padding: 6px 4px; text-align:right; font-size:13px; font-weight:500; ' + color + '">' + fmtK(s.data.afterTax) + '</td>' +
+                 '<td style="padding: 6px 4px; text-align:right; font-size:13px; font-weight:500; ' + color + '">' + Math.round(roi) + '%</td></tr>';
+    });
+    roiHtml += '</table>';
+    roiHtml += '<p class="mn-note" style="margin-top:10px">Annual figures: each row is the steady-state yearly after-tax cash divided by the $150k annual MCS fee. The fee recurs every year per the flyer\'s "ANNUAL FEE" labeling. Real cash exposure is higher: working capital, attorney, CPA, application fees, and 9–14 months of pre-revenue runway add another $50k–$200k+ that the licensee must front before any revenue arrives. For multi-year projection, see the 5-year outlook tab.</p>';
+    document.getElementById('C_roi').innerHTML = roiHtml;
+
+    // Channel presets reference card
+    var pHtml = '<table style="width:100%; font-size:12px; font-variant-numeric: tabular-nums; table-layout: fixed;">';
+    pHtml += '<colgroup><col style="width: 32%"><col><col><col><col><col></colgroup>';
+    pHtml += '<tr style="border-bottom: 0.5px solid var(--color-border-tertiary);">';
+    pHtml += '<td style="padding: 6px 4px; font-size:11px; color: var(--color-text-secondary);">Scenario</td>';
+    pHtml += '<td style="padding: 6px 4px; font-size:11px; color: var(--color-text-secondary); text-align:right;">Price</td>';
+    pHtml += '<td style="padding: 6px 4px; font-size:11px; color: var(--color-text-secondary); text-align:right;">Hardware</td>';
+    pHtml += '<td style="padding: 6px 4px; font-size:11px; color: var(--color-text-secondary); text-align:right;">Packaging</td>';
+    pHtml += '<td style="padding: 6px 4px; font-size:11px; color: var(--color-text-secondary); text-align:right;">Branding</td>';
+    pHtml += '<td style="padding: 6px 4px; font-size:11px; color: var(--color-text-secondary); text-align:right;">Sales</td></tr>';
+    [['A_retail', '$/lb'], ['A_bulk', '$/lb'], ['B_retail', '$/g'], ['B_bulk', '$/g']].forEach(function(pair){
+      var k = pair[0], unit = pair[1];
+      var p = channelPresets[k];
+      pHtml += '<tr>';
+      pHtml += '<td style="padding: 6px 4px; font-size:12px;">' + p.label + '</td>';
+      pHtml += '<td style="padding: 6px 4px; font-size:12px; text-align:right;">$' + p.price + ' ' + unit + '</td>';
+      pHtml += '<td style="padding: 6px 4px; font-size:12px; text-align:right; color: var(--color-text-secondary);">' + (p.hw !== undefined ? fmtK(p.hw) : 'n/a') + '</td>';
+      pHtml += '<td style="padding: 6px 4px; font-size:12px; text-align:right;">' + fmtK(p.pack) + '</td>';
+      pHtml += '<td style="padding: 6px 4px; font-size:12px; text-align:right;">' + fmtK(p.brand) + '</td>';
+      pHtml += '<td style="padding: 6px 4px; font-size:12px; text-align:right;">' + fmtK(p.sales) + '</td>';
+      pHtml += '</tr>';
+    });
+    pHtml += '</table>';
+    document.getElementById('C_presets').innerHTML = pHtml;
+  }
+
+  // ============================ 5-YEAR PROJECTION ============================
+
+  // Calculate a single year for a pathway, given trajectory + haircut state
+  function calcYear(yearNum, pathwayKey){
+    var preset = channelPresets[pathwayKey];
+    var n = yearNum - 1; // 0-indexed for compounding
+
+    var priceFactor = Math.pow(1 + v('D_price_yoy')/100, n);
+    var yieldFactor = Math.pow(1 + v('D_yield_yoy')/100, n);
+    var mcsFactor = Math.pow(1 + v('D_mcs_yoy')/100, n);
+    // MCS-provided costs locked at year-1 dollar values; mcsFactor lets user stress-test contract escalation.
+
+    // Year-1 setup haircut: only apply for years 2+
+    var brandCut = (yearNum === 1) ? 1 : (1 - v('D_brand_cut')/100);
+    var profCut  = (yearNum === 1) ? 1 : (1 - v('D_prof_cut')/100);
+    var salesCut = (yearNum === 1) ? 1 : (1 - v('D_sales_cut')/100);
+
+    var isA = pathwayKey.charAt(0) === 'A';
+
+    if (isA) {
+      var yieldLbs = v('A_yield') * yieldFactor;     // year-n: drives revenue, packaging, transport
+      var yieldLbs_y1 = v('A_yield');                 // year-1: locks MCS variable costs flat
+      var price = preset.price * priceFactor;
+      var revenue = yieldLbs * price;
+
+      // MCS-provided costs locked at year-1 dollar values for all 5 years (per assumption)
+      var fee = v('A_fee');
+      var lease = v('A_lease') * 12;
+      var admin = v('A_admin') * 12;
+      var trim = v('A_trim') * yieldLbs_y1;
+      var mcs = (fee + lease + admin + trim) * mcsFactor;
+
+      var lab = (labModeA === 'included') ? 0 : v('A_lab');
+      var pack = preset.pack * yieldFactor; // scales with output volume
+      var cogs = mcs + lab + pack;
+      var grossProfit = revenue - cogs;
+
+      var brand = preset.brand * brandCut;
+      var sales = preset.sales * salesCut;
+      var trans = preset.trans * yieldFactor; // scales with shipped volume
+      var bank = v('A_bank');
+      var ins = v('A_ins');
+      var prof = v('A_prof') * profCut;
+      var debt = v('A_debt') * priceFactor * yieldFactor; // scales with revenue
+      var opex = brand + sales + trans + bank + ins + prof + debt;
+
+      var realPretax = grossProfit - opex;
+      var fedTax = Math.max(0, grossProfit * v('A_280')/100);
+      var stateTax = Math.max(0, realPretax * v('A_mn')/100);
+      var totalTax = fedTax + stateTax;
+      var afterTax = realPretax - totalTax;
+      return { revenue: revenue, cogs: cogs, mcs: mcs, grossProfit: grossProfit, opex: opex, realPretax: realPretax, totalTax: totalTax, afterTax: afterTax };
+    } else {
+      var ff = v('B_ff') * yieldFactor;            // year-n: drives revenue, packaging, hardware
+      var ff_y1 = v('B_ff');                        // year-1: locks MCS processing flat
+      var pct = v('B_pct') / 100;
+      var grams = ff * 453.592 * pct;
+      var grams_y1 = ff_y1 * 453.592 * pct;
+      var price = preset.price * priceFactor;
+      var revenue = grams * price;
+
+      // MCS-provided costs locked at year-1 dollar values for all 5 years (per assumption)
+      var fee = v('B_fee');
+      var lease = v('B_lease') * 12;
+      var admin = v('B_admin') * 12;
+      var proc = v('B_proc') * grams_y1;
+      var mcs = (fee + lease + admin + proc) * mcsFactor;
+
+      var lab = (labModeB === 'included') ? 0 : v('B_lab');
+      var hw = preset.hw * yieldFactor; // hardware scales with cart count
+      var pack = preset.pack * yieldFactor;
+      var cogs = mcs + lab + hw + pack;
+      var grossProfit = revenue - cogs;
+
+      var brand = preset.brand * brandCut;
+      var sales = preset.sales * salesCut;
+      var trans = preset.trans * yieldFactor;
+      var bank = v('B_bank');
+      var ins = v('B_ins');
+      var prof = v('B_prof') * profCut;
+      var debt = v('B_debt') * priceFactor * yieldFactor;
+      var opex = brand + sales + trans + bank + ins + prof + debt;
+
+      var realPretax = grossProfit - opex;
+      var fedTax = Math.max(0, grossProfit * v('B_280')/100);
+      var stateTax = Math.max(0, realPretax * v('B_mn')/100);
+      var totalTax = fedTax + stateTax;
+      var afterTax = realPretax - totalTax;
+      return { revenue: revenue, cogs: cogs, mcs: mcs, grossProfit: grossProfit, opex: opex, realPretax: realPretax, totalTax: totalTax, afterTax: afterTax };
+    }
+  }
+
+  function render5yr(){
+    var years = [1,2,3,4,5].map(function(yr){ return calcYear(yr, yr5Path); });
+    var labelByPath = { A_retail: 'Pathway A · Retail flower', A_bulk: 'Pathway A · Bulk flower', B_retail: 'Pathway B · Retail vapes', B_bulk: 'Pathway B · Bulk oil' };
+
+    // MCS locked-cost banner
+    var isA = yr5Path.charAt(0) === 'A';
+    var feeAnnual = isA ? v('A_fee') : v('B_fee');
+    var leaseAnnual = (isA ? v('A_lease') : v('B_lease')) * 12;
+    var adminAnnual = (isA ? v('A_admin') : v('B_admin')) * 12;
+    var perUnitLabel = isA ? ('$' + v('A_trim') + '/lb trim') : ('$' + v('B_proc').toFixed(2) + '/g processing');
+    var mcsHtml = '<div style="background: var(--color-background-info); border-radius: var(--border-radius-md); padding: 10px 14px; margin: 12px 0; font-size: 12px; color: var(--color-text-info);">' +
+      '<strong>MCS-provided costs locked flat across years 1–5:</strong> ' +
+      'annual fee ' + fmtK(feeAnnual) + ' · lease ' + fmtK(leaseAnnual) + ' · admin ' + fmtK(adminAnnual) + ' · ' + perUnitLabel + ' (per-unit; total scales with yield)' +
+      '</div>';
+    document.getElementById('D_mcs_lock').innerHTML = mcsHtml;
+
+    // Build cumulative totals
+    var cum = { revenue: 0, cogs: 0, grossProfit: 0, opex: 0, realPretax: 0, totalTax: 0, afterTax: 0 };
+    years.forEach(function(y){ Object.keys(cum).forEach(function(k){ cum[k] += y[k]; }); });
+
+    var rows = [
+      { key: 'revenue',    label: 'Revenue' },
+      { key: 'cogs',       label: 'COGS (MCS + lab + packaging)' },
+      { key: 'grossProfit', label: 'Gross profit', emphasis: true },
+      { key: 'opex',       label: 'Post-grow opex' },
+      { key: 'realPretax', label: 'Real pre-tax profit', emphasis: true },
+      { key: 'totalTax',   label: 'Total tax (fed + MN)' },
+      { key: 'afterTax',   label: 'After-tax cash', emphasis: true, final: true },
+    ];
+
+    var html = '<p style="font-size:12px; color: var(--color-text-secondary); margin: 0 0 8px;">' + labelByPath[yr5Path] + '</p>';
+    html += '<table style="width:100%; font-size:13px; font-variant-numeric: tabular-nums; border-collapse: collapse; table-layout: fixed;">';
+    html += '<colgroup><col style="width: 28%"><col><col><col><col><col><col style="width: 14%; border-left: 0.5px solid var(--color-border-secondary);"></colgroup>';
+    html += '<tr style="border-bottom: 0.5px solid var(--color-border-secondary);">';
+    html += '<td style="padding: 8px 4px; color: var(--color-text-secondary); font-size:11px;">Line item</td>';
+    [1,2,3,4,5].forEach(function(yr){
+      html += '<td style="padding: 8px 4px; text-align:right; font-weight:500; font-size:11px;">Year ' + yr + '</td>';
+    });
+    html += '<td style="padding: 8px 4px; text-align:right; font-weight:500; font-size:11px; color: var(--color-text-info);">5-yr total</td>';
+    html += '</tr>';
+
+    rows.forEach(function(li){
+      var border = li.emphasis ? 'border-top: 0.5px solid var(--color-border-tertiary);' : '';
+      var weight = li.emphasis ? 'font-weight:500;' : '';
+      var labelColor = li.emphasis ? '' : 'color: var(--color-text-secondary);';
+      html += '<tr style="' + border + '">';
+      html += '<td style="padding: 6px 4px; font-size:12px; ' + weight + ' ' + labelColor + '">' + li.label + '</td>';
+      years.forEach(function(y){
+        var val = y[li.key];
+        var color = '';
+        if (li.final) color = (val >= 0) ? 'color: var(--color-text-success);' : 'color: var(--color-text-danger);';
+        html += '<td style="padding: 6px 4px; text-align:right; font-size:12px; ' + weight + ' ' + color + '">' + fmtK(val) + '</td>';
+      });
+      var cumVal = cum[li.key];
+      var cumColor = li.final ? ((cumVal >= 0) ? 'color: var(--color-text-success);' : 'color: var(--color-text-danger);') : '';
+      html += '<td style="padding: 6px 4px; text-align:right; font-size:12px; font-weight:500; border-left: 0.5px solid var(--color-border-tertiary); ' + cumColor + '">' + fmtK(cumVal) + '</td>';
+      html += '</tr>';
+    });
+    html += '</table>';
+    document.getElementById('D_table').innerHTML = html;
+
+    // Cumulative summary — $150k is labeled ANNUAL FEE on flyer, so it recurs each year
+    var annualFee = 150000;
+    var totalFees = annualFee * 5; // $750k over 5 years
+    var roi5yr = cum.afterTax / totalFees * 100;
+    var avgAnnual = cum.afterTax / 5;
+    var avgRoiAnnual = avgAnnual / annualFee * 100;
+
+    var statHtml = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 12px;">';
+    statHtml += '<div class="mn-stat"><div class="lbl">5-yr after-tax cash</div><div class="num" style="' + (cum.afterTax >= 0 ? 'color: var(--color-text-success);' : 'color: var(--color-text-danger);') + '">' + fmtK(cum.afterTax) + '</div></div>';
+    statHtml += '<div class="mn-stat"><div class="lbl">Avg annual after-tax</div><div class="num">' + fmtK(avgAnnual) + '</div></div>';
+    statHtml += '<div class="mn-stat"><div class="lbl">Avg annual return on $150k fee</div><div class="num">' + Math.round(avgRoiAnnual) + '%</div></div>';
+    statHtml += '<div class="mn-stat"><div class="lbl">5-yr return on $750k fees</div><div class="num">' + Math.round(roi5yr) + '%</div></div>';
+    statHtml += '</div>';
+    statHtml += '<p class="mn-note">The $150,000 is labeled <strong>ANNUAL FEE</strong> on the Blue Ox flyer, so it recurs every year — $750,000 of total fees over 5 years. The "avg annual return on $150k fee" is the ratio of average yearly after-tax cash to the $150k yearly outlay; "5-yr return on $750k fees" is the cumulative version. Both already include the MCS fees as expenses inside the calculation, so this is the return on top of paying MCS each year.</p>';
+    document.getElementById('D_cumulative').innerHTML = statHtml;
+  }
+
+  function compute(){
+    var a = calcA();
+    renderSummary(a, 'A_summary');
+    renderPL_A(a);
+    var b = calcB();
+    renderSummary(b, 'B_summary');
+    renderPL_B(b);
+    var activeTab = document.querySelector('.mn-tab.active').dataset.tab;
+    if (activeTab === 'C') renderCompare();
+    if (activeTab === 'D') render5yr();
+  }
+
+  compute();
+})();
+</script>
+
+<div class="calc-footer">
+  Borealis Logistics · cannabis seed-to-sale software for licensed operators · <a href="mailto:hello@borealislogistics.com">hello@borealislogistics.com</a><br>
+  Calculator outputs are estimates based on user-supplied assumptions and publicly available tax/licensing information. Not legal, tax, or financial advice.
+</div>
+
+</div>
+
+<script>
+const auroraCanvas = document.getElementById('aurora');
+const auroraCtx = auroraCanvas.getContext('2d');
+let AW, AH, At = 0;
+
+function auroraResize() {
+  AW = auroraCanvas.width = window.innerWidth;
+  AH = auroraCanvas.height = window.innerHeight;
+}
+auroraResize();
+window.addEventListener('resize', auroraResize);
+
+const auroraBands = [
+  { color: [0, 212, 180],   y: 0.15, amp: 0.07, speed: 0.38, thick: 0.22 },
+  { color: [34, 211, 238],  y: 0.32, amp: 0.09, speed: 0.28, thick: 0.18 },
+  { color: [124, 58, 237],  y: 0.50, amp: 0.06, speed: 0.48, thick: 0.15 },
+  { color: [56, 189, 248],  y: 0.68, amp: 0.08, speed: 0.33, thick: 0.13 },
+  { color: [168, 85, 247],  y: 0.84, amp: 0.05, speed: 0.42, thick: 0.11 },
+];
+
+function drawAurora() {
+  auroraCtx.clearRect(0, 0, AW, AH);
+  for (const b of auroraBands) {
+    const baseY = b.y * AH;
+    const N = 8;
+    for (let layer = 0; layer < 3; layer++) {
+      auroraCtx.beginPath();
+      const pts = [];
+      for (let i = 0; i <= N; i++) {
+        const x = (i / N) * AW;
+        const y = baseY
+          + Math.sin(At * b.speed + i * 0.75 + layer * 1.4) * b.amp * AH
+          + Math.sin(At * b.speed * 1.3 + i * 1.2 + layer * 0.9) * b.amp * 0.4 * AH;
+        pts.push({ x, y });
+      }
+      const top = pts.map(p => ({ x: p.x, y: p.y - b.thick * AH * 0.5 }));
+      auroraCtx.moveTo(top[0].x, top[0].y);
+      for (let i = 1; i < top.length; i++) {
+        const cp = { x: (top[i-1].x + top[i].x) / 2, y: (top[i-1].y + top[i].y) / 2 };
+        auroraCtx.quadraticCurveTo(top[i-1].x, top[i-1].y, cp.x, cp.y);
+      }
+      for (let i = pts.length - 1; i >= 0; i--) {
+        const by = pts[i].y + b.thick * AH;
+        if (i === pts.length - 1) { auroraCtx.lineTo(pts[i].x, by); continue; }
+        const nx = pts[i+1].x, ny = pts[i+1].y + b.thick * AH;
+        auroraCtx.quadraticCurveTo(nx, ny, (pts[i].x + nx) / 2, (by + ny) / 2);
+      }
+      auroraCtx.closePath();
+      const opacity = (0.13 - layer * 0.035) * (1 + Math.sin(At * 0.28 + layer) * 0.3);
+      auroraCtx.fillStyle = `rgba(${b.color[0]},${b.color[1]},${b.color[2]},${opacity})`;
+      auroraCtx.fill();
+    }
+  }
+  At += 0.005;
+  requestAnimationFrame(drawAurora);
+}
+drawAurora();
+</script>
+
+</body>
+</html>
